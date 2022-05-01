@@ -152,7 +152,9 @@ def get_movies_faceted(filters, page, movies_per_page):
 
     # TODO: Faceted Search
     # Add the necessary stages to the pipeline variable in the correct order.
-    # pipeline.extend(...)
+    pipeline.extend(
+        [skip_stage, limit_stage, facet_stage]
+    )
 
     try:
         movies = list(db.movies.aggregate(pipeline, allowDiskUse=True))[0]
@@ -180,7 +182,7 @@ def build_query_sort_project(filters):
         if "text" in filters:
             query = {"$text": {"$search": filters["text"]}}
             meta_score = {"$meta": "textScore"}
-            sort = [("score", meta_score)]
+            sort = [("score", meta_score), ("_id", ASCENDING)]
             project = {"score": meta_score}
         elif "cast" in filters:
             query = {"cast": {"$in": filters["cast"]}}
@@ -235,7 +237,8 @@ def get_movies(filters, page, movies_per_page):
 
     # TODO: Paging
     # Use the cursor to only return the movies that belong on the current page.
-    movies = cursor.limit(movies_per_page)
+    movies_skip = page * movies_per_page
+    movies = cursor.skip(movies_skip).limit(movies_per_page)
 
     return (list(movies), total_num_movies)
 
