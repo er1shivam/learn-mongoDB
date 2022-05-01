@@ -1,2 +1,4 @@
 .ini
 .credentials
+*.pyc
+.cache
